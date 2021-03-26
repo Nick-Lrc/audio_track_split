@@ -121,6 +121,10 @@ def cut_video(src, dst, disc, track, options):
             del metadata[key]
     metadata['track'] = f'{int(metadata["track"])}/{len(disc["tracks"])}'
     metadata['album'] = disc['title']
+    if 'artist' not in metadata and 'performer' in metadata:
+        metadata['artist'] = metadata['performer']
+    if 'album_artist' not in metadata and 'performer' in disc:
+        metadata['album_artist'] = disc['performer']
 
     for key, val in metadata.items():
         params += [
