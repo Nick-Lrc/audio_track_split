@@ -152,5 +152,6 @@ if __name__ == "__main__":
     cue.parse(document)
 
     for track in cue.info()['tracks']:
+        src = os.path.join(os.path.split(options.input)[0], cue.info()["file"])
         dst = os.path.join(options.output, f'{track["title"]}.{options.audio_encoding}')
-        cut_video(cue.info()["file"], dst, cue.info(), track)
+        cut_video(src, dst, cue.info(), track)
