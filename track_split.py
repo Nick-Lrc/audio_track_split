@@ -109,8 +109,6 @@ def cut_video(src, dst, disc, track):
 
     params += [
         '-i', src,
-        # '-c', 'copy', 
-        # '-copyts'
     ]
 
     metadata = track.copy()
@@ -148,6 +146,7 @@ if __name__ == "__main__":
         os.makedirs(options.output)
     
     # https://docs.python.org/3/library/codecs.html#standard-encodings
+    # https://www.gnu.org/software/ccd2cue/manual/html_node/CUE-sheet-format.html#CUE-sheet-format
     document = open(options.input, 'r', encoding=options.text_encoding)
     cue = CueParser()
     cue.parse(document)
