@@ -21,8 +21,10 @@ optional arguments:
                         input CUE sheet
   -o OUTPUT, --output OUTPUT
                         output directory
-  --audio-encoding AUDIO_ENCODING
-                        output audio encoding
+  --audio-format AUDIO_FORMAT
+                        output audio format
+  --audio-codec AUDIO_CODEC
+                        output audio codec
   --text-encoding TEXT_ENCODING
                         text encoding
 ```
@@ -37,13 +39,19 @@ optional arguments:
   - Specify the encoding of the CUE sheet
 
   ```bash
-  python track_split.py -i path/to/input/audio -o path/to/output/directory --text-encoding='utf-8'
+  python track_split.py -i path/to/input/audio -o path/to/output/directory --text-encoding "utf-8"
   ```
 
-  - Specify the encoding of the output audio files
+  - Specify the format of the output audio files
 
   ```bash
-  python track_split.py -i path/to/input/audio -o path/to/output/directory --audio-encoding='mp3'
+  python track_split.py -i path/to/input/audio -o path/to/output/directory --audio-format "mp3"
+  ```
+
+  - Optionally Specify the codec of the output audio file
+
+  ```bash
+  python track_split.py -i path/to/input/audio -o path/to/output/directory --audio-format "m4a" --audio-codec "alac"
   ```
 
 ---

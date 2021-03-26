@@ -9,6 +9,7 @@ import datetime
 FILE_TAGS = {'file', 'start', 'end', 'tracks'}
 
 # https://en.wikipedia.org/wiki/Cue_sheet_(computing)
+# https://www.gnu.org/software/ccd2cue/manual/html_node/CUE-sheet-format.html#CUE-sheet-format
 class CueParser():
     def __init__(self):
         self._clear()
@@ -97,7 +98,7 @@ class CueParser():
         self._tracks = []
         self._info = None
 
-def cut_video(src, dst, disc, track):
+def cut_video(src, dst, disc, track, options):
     params = [
         'ffmpeg',
         '-y',
@@ -126,6 +127,8 @@ def cut_video(src, dst, disc, track):
             '-metadata', f'{key}={val}'
         ]
 
+    if options.audio_codec:
+        params += ['-c:a', options.audio_codec]
     params += [dst]
     subprocess.run(params)
 
@@ -136,7 +139,8 @@ def options():
     parser = argparse.ArgumentParser(description='Split audio tracks')
     parser.add_argument('-i', '--input', type=str, help='input CUE sheet')
     parser.add_argument('-o', '--output', type=str, default='.', help='output directory')
-    parser.add_argument('--audio-encoding', type=str, default='flac', help='output audio encoding')
+    parser.add_argument('--audio-format', type=str, default='flac', help='output audio format')
+    parser.add_argument('--audio-codec', type=str, default=None, help='output audio codec')
     parser.add_argument('--text-encoding', type=str, default='mbcs', help='text encoding')
     return parser.parse_args()
 
@@ -146,12 +150,11 @@ if __name__ == "__main__":
         os.makedirs(options.output)
     
     # https://docs.python.org/3/library/codecs.html#standard-encodings
-    # https://www.gnu.org/software/ccd2cue/manual/html_node/CUE-sheet-format.html#CUE-sheet-format
     document = open(options.input, 'r', encoding=options.text_encoding)
     cue = CueParser()
     cue.parse(document)
 
     for track in cue.info()['tracks']:
         src = os.path.join(os.path.split(options.input)[0], cue.info()["file"])
-        dst = os.path.join(options.output, f'{track["title"]}.{options.audio_encoding}')
-        cut_video(src, dst, cue.info(), track)
+        dst = os.path.join(options.output, f'{track["title"]}.{options.audio_format}')
+        cut_video(src, dst, cue.info(), track, options)
