@@ -7,6 +7,7 @@ import os, os.path
 import datetime
 
 FILE_TAGS = {'file', 'start', 'end', 'tracks'}
+INVALID_CHARACTERS = {'<', '>', ':', '"', '/', '\\', '|', '?', '*'}
 
 # https://en.wikipedia.org/wiki/Cue_sheet_(computing)
 # https://www.gnu.org/software/ccd2cue/manual/html_node/CUE-sheet-format.html#CUE-sheet-format
@@ -30,6 +31,7 @@ class CueParser():
         while line:
             line = self._parse_track(doc)
         self._complete_endings()
+        self._get_unique_titles()
 
     def _parse_disc(self, doc):
         line = self._readline(doc)
@@ -90,6 +92,18 @@ class CueParser():
                 if 'end' not in self._tracks[i]:
                     self._tracks[i]['end'] = self._tracks[i + 1]['start']
 
+    def _get_unique_titles(self):
+        titles = defaultdict(int)
+        for track in self._tracks:
+            title = track['title']
+            if title in titles:
+                if 'performer' in track:
+                    title = f'{title} ({track["performer"]} ver.)'
+                    track['title'] = title
+                else:
+                    track['title'] = f'{title} (ver. {titles[title]})'
+            titles[title] += 1
+
     def _readline(self, doc):
         return doc.readline().strip()
 
@@ -139,6 +153,11 @@ def cut_video(src, dst, disc, track, options):
 def convert_timestamp(timestamp, format='%M:%S:%f'):
     return datetime.datetime.strptime(timestamp, format).strftime('%H:%M:%S.%f')
 
+def remove_invalid_characters(title):
+    for character in INVALID_CHARACTERS:
+        title = title.replace(character, ' ')
+    return title.strip()
+
 def options():
     parser = argparse.ArgumentParser(description='Split audio tracks')
     parser.add_argument('-i', '--input', type=str, help='input CUE sheet')
@@ -160,5 +179,5 @@ if __name__ == "__main__":
 
     for track in cue.info()['tracks']:
         src = os.path.join(os.path.split(options.input)[0], cue.info()["file"])
-        dst = os.path.join(options.output, f'{track["title"]}.{options.audio_format}')
+        dst = os.path.join(options.output, f'{remove_invalid_characters(track["title"])}.{options.audio_format}')
         cut_video(src, dst, cue.info(), track, options)
