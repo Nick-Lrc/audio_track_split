@@ -7,7 +7,17 @@ import os, os.path
 import datetime
 
 FILE_TAGS = {'file', 'start', 'end', 'tracks'}
-INVALID_CHARACTERS = {'<', '>', ':', '"', '/', '\\', '|', '?', '*'}
+INVALID_CHARACTERS = {
+    '<': '‹', 
+    '>': '›', 
+    ':': '：', 
+    '"': '\'', 
+    '/': '／', 
+    '\\': '＼', 
+    '|': '∣', 
+    '?': '？', 
+    '*': '＊'
+}
 
 # https://en.wikipedia.org/wiki/Cue_sheet_(computing)
 # https://www.gnu.org/software/ccd2cue/manual/html_node/CUE-sheet-format.html#CUE-sheet-format
@@ -153,9 +163,9 @@ def cut_video(src, dst, disc, track, options):
 def convert_timestamp(timestamp, format='%M:%S:%f'):
     return datetime.datetime.strptime(timestamp, format).strftime('%H:%M:%S.%f')
 
-def remove_invalid_characters(title):
+def replace_invalid_characters(title):
     for character in INVALID_CHARACTERS:
-        title = title.replace(character, ' ')
+        title = title.replace(character, INVALID_CHARACTERS[character])
     return title.strip()
 
 def options():
@@ -179,5 +189,5 @@ if __name__ == "__main__":
 
     for track in cue.info()['tracks']:
         src = os.path.join(os.path.split(options.input)[0], cue.info()["file"])
-        dst = os.path.join(options.output, f'{remove_invalid_characters(track["title"])}.{options.audio_format}')
+        dst = os.path.join(options.output, f'{replace_invalid_characters(track["title"])}.{options.audio_format}')
         cut_video(src, dst, cue.info(), track, options)
