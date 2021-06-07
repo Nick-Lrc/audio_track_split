@@ -22,8 +22,9 @@ INVALID_CHARACTERS = {
 # https://en.wikipedia.org/wiki/Cue_sheet_(computing)
 # https://www.gnu.org/software/ccd2cue/manual/html_node/CUE-sheet-format.html#CUE-sheet-format
 class CueParser():
-    def __init__(self):
+    def __init__(self, offset='00:00:00.00'):
         self._clear()
+        self.offset = offset
 
     def info(self):
         if not self._info:
@@ -62,7 +63,7 @@ class CueParser():
     def _parse_index_tag(self, line):
         fields = line.split(maxsplit=2)
         if len(fields) == 3 and fields[0] == 'INDEX':
-            timestamp = convert_timestamp(fields[2])
+            timestamp = convert_timestamp(fields[2], offset=self.offset)
             if fields[1] == '01':
                 return self._parse_tag(self._tracks[-1], f'START {timestamp}')
             elif len(self._tracks) - 2 >= 0:
@@ -160,8 +161,11 @@ def cut_video(src, dst, disc, track, options):
     params += [dst]
     subprocess.run(params)
 
-def convert_timestamp(timestamp, format='%M:%S:%f'):
-    return datetime.datetime.strptime(timestamp, format).strftime('%H:%M:%S.%f')
+def convert_timestamp(timestamp, format='%M:%S:%f', offset='00:00:00.00'):
+    original = datetime.datetime.strptime(timestamp, format)
+    base = datetime.datetime.strptime('00:00:00', format)
+    diff = datetime.datetime.strptime(offset, '%H:%M:%S.%f')
+    return (original + (diff - base)).strftime('%H:%M:%S.%f')
 
 def replace_invalid_characters(title):
     for character in INVALID_CHARACTERS:
@@ -175,6 +179,7 @@ def options():
     parser.add_argument('--audio-format', type=str, default='flac', help='output audio format')
     parser.add_argument('--audio-codec', type=str, default=None, help='output audio codec')
     parser.add_argument('--text-encoding', type=str, default='mbcs', help='text encoding')
+    parser.add_argument('--offset', type=str, default='00:00:00.00', help='track offset')
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -184,7 +189,7 @@ if __name__ == "__main__":
     
     # https://docs.python.org/3/library/codecs.html#standard-encodings
     document = open(options.input, 'r', encoding=options.text_encoding)
-    cue = CueParser()
+    cue = CueParser(offset=options.offset)
     cue.parse(document)
 
     for track in cue.info()['tracks']:
